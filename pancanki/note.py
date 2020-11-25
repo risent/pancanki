@@ -1,6 +1,3 @@
 class Note:
-	def __init__(self, note_type, **fields):
-		self.note_type = note_type
+	def __init__(self, **fields):
 		self.fields = fields
-
-	
