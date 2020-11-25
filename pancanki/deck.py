@@ -12,6 +12,7 @@ from . import exceptions
 
 class Deck:
 	default_config = {
+		'deck_id': None
 		'filename': None,
 		'extract_to': None,
 		'in_memory': False,
@@ -19,11 +20,13 @@ class Deck:
 		'from_csv': None,
 	}
 
-	conn = None
 	connection_uri = None
 	connection_flags = None
 	collection_path = None
 	media_path = None
+
+	conn = None
+	cursor = None
 
 	apkg_file = None
 	apkg_filepath = None
@@ -41,6 +44,18 @@ class Deck:
 		if self.config.get('read_only'):
 			self.connection_flags = 'mode=ro'
 
+		if self.config.get('in_memory'):
+			self._create_connection_in_memory()
+		else:
+			# unzip .apkg and set necessary paths
+			self.connection_uri = None
+			self._create_connection()
+
+		if self.config.get('deck_id'):
+			self.deck_id = self.config.get('deck_id')
+		else:
+			self.deck_id = self._generate_deck_id()
+
 	def __iter__(self):
 		""" Iterate through cards in collection.
 		"""
@@ -53,8 +68,11 @@ class Deck:
 		"""
 		return True
 
+	def generate_deck_id(self):
+		pass
+
 	def _create_connection_in_memory(self) -> None:
-		""" Copies collection database 	
+		""" Copies collection database from .apkg file into an in-memory database.
 		"""
 		with open(self.apkg_filepath, 'rb') as fo:
 			x_files = zipfile.ZipFile(io.BytesIO(fo.read()))
@@ -74,6 +92,8 @@ class Deck:
 			temp_connection.close()
 
 	def _create_connection(self) -> None:
+		""" Sets connection as a standard connection based on unzipped .apkg file.
+		"""
 		self.conn = sqlite3.connect(self.connecion_uri + '?' + self.connection_flags, uri=True)
 
 	def _close_connection(self) -> None:
@@ -83,33 +103,24 @@ class Deck:
 	def _save_changes(self) -> None:
 		pass
 
-	def _open_media(self) -> bool:
+	def notes(self) -> List[schemas.Note]:
 		pass
 
-	def cards(self, **filters) -> List[schemas.Card]:
+	def cards(self) -> List[schemas.Card]:
 		pass
 
 	def add_card(self, card: schemas.Card):
 		pass
 
-	def add_cards(self, cards: List[schemas.Card]):
+	def delete_card(self, card_id) -> None:
 		pass
 
-	def delete_cards(self, **filters) -> None:
-		pass
+	@property
+	def size(self):
+		""" Returns the number of cards in the deck.
+		"""
 
-
-def new_deck(name: str, from_csv: str = None) -> Deck:
-	""" Creates and initializes a new Anki2 deck.
-	"""
-	cfg = {
-		'filename': name,
-		'from_csv': from_csv
-	}
-
-	d = Deck(cfg)
-
-	return d
+		return 0
 
 
 def open_deck(filename: str = None, extract_to: str = None, in_memory: bool = False, read_only: bool = False) -> Deck:

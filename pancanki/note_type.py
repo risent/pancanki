@@ -10,9 +10,8 @@ class Field:
 	def __init__(self, name: str, media: List[str] = None, **extras):
 		self.name = name
 		self.media = media if media else []
-		self.required_for = required_for if required_for else []
 		self.extras = extras
-		
+
 
 class NoteType:
 	deck_id: str = None
@@ -22,7 +21,7 @@ class NoteType:
 		'cloze': 1
 	}
 
-	def __init__(self, note_type_id, deck_id: str, fields: List[Field] = None, templates: List[Dict] = None, style: str = None, **extras):
+	def __init__(self, note_type_id: str = None, deck_id: str = None, fields: List[Field] = None, templates: List[Dict] = None, style: str = None, **extras):
 		self.note_type_id = note_type_id
 		self.deck_id = deck_id		
 		self.templates = templates
@@ -43,27 +42,13 @@ class NoteType:
 	def __str__(self):
 		return json.dumps(self.prepare())
 
-	def _valid_extras(self, extras):
-		return True
-
-	def _valid_fields(self, fields):
-		template_names = set([template['name'] for template in self.templates])
-
-		for field in fields:
-			if field.required_for:
-				for template_name in field.required_for:
-					if template_name not in template_names:
-						raise 'Field is required for a template that does not exist.'
-
-		return True
-
-	def _prepare_req(self):
+	def _prepare_req(self) -> List:
 		""" ...
 
-			This method is heavily inspired from kerrickstanley et al over at genanki since I couldn't think of
-			a better solution to implement myself - and if I did it would probably be extremely similar to it...
+		This method is heavily inspired from kerrickstanley et al over at genanki since I couldn't think of
+		a better solution to implement myself - and if I did it would probably be extremely similar to it...
 
-			See: https://github.com/kerrickstaley/genanki/blob/master/genanki/model.py#L32
+		See: https://github.com/kerrickstaley/genanki/blob/master/genanki/model.py#L32
 		"""
 		req = []
 
@@ -105,19 +90,21 @@ class NoteType:
 		
 		return req
 
-	def prepare(self):
+	def prepare(self) -> Dict:
+		""" Constructs a dictionary that is used to populate the deck's `models` column in its `col` table.
+		"""
 		note_type = {
 			self.note_type_id: {
 				'css': style if style else '',
 				'did': self.deck_id,
 				'flds': [ {
-						'font': fld.extras.get('font_family', ''),
-						'media': fld.media,
-						'name': fld.name,
-						'ord': fld.ordinal,
-						'rtl': fld.extras.get('right_to_left_script', False),
-						'size': fld.extras.get('font_size', ''),
-						'sticky': fld.extras.get('sticky', '')
+					'font': fld.extras.get('font_family', ''),
+					'media': fld.media,
+					'name': fld.name,
+					'ord': fld.ordinal,
+					'rtl': fld.extras.get('right_to_left_script', False),
+					'size': fld.extras.get('font_size', ''),
+					'sticky': fld.extras.get('sticky', '')
 					} for fld in self.fields ],
 				'id': self.note_type_id,
 				'latexPre': self.extras.get('latex_pre', ''),
@@ -128,13 +115,13 @@ class NoteType:
 				'sortf': 0,
 				'tags': [],
 				'tmpls': [ {
-						'afmt': tmpl.answer_format,
-						'bafmt': tmpl.extras.get('browser_answer_format', ''),
-						'bqfmt': tmpl.extras.get('browser_question_format', ''),
-						'did': None,
-						'name': tmpl.name,
-						'ord': tmpl.ordinal,
-						'qfmt': template.question_format
+					'afmt': tmpl.answer_format,
+					'bafmt': tmpl.extras.get('browser_answer_format', ''),
+					'bqfmt': tmpl.extras.get('browser_question_format', ''),
+					'did': None,
+					'name': tmpl.name,
+					'ord': tmpl.ordinal,
+					'qfmt': template.question_format
 					} for tmpl in self.templates ],
 				'type': self.note_type_map[self.extras.get('type', 0)],
 				'usn': 0,
