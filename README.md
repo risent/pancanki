@@ -19,18 +19,14 @@ deck = open_deck('path/to/my_anki_deck.apkg')
 print(deck.size)
 # 42
 
-some_cards = deck.cards(type='new')
-# [<Card: ...>, <Card: ...>, ...]
+my_note_type = deck.note_types[0]
 
-# Iterate through all cards in the deck and make edits to them.
-for card in deck:
-    card.style = None
+print(my_note_type.style)
+# .card { ... }
 
-# Commits changes to cards and save any other changes made to the deck.
-deck.save()
+my_note_type.style = '.card {font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white;}'
 
-# Recompresses files and removes all uncompressed files. Cleans up.
-deck.close()
+deck.package()
 ```
 
 ### Creating a New Deck
