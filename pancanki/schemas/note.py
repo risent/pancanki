@@ -1,2 +1,2 @@
 class Note:
-	pass
+    pass
