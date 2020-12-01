@@ -24,7 +24,7 @@ some_cards = deck.cards(type='new')
 
 # Iterate through all cards in the deck and make edits to them.
 for card in deck:
-	card.style = None
+    card.style = None
 
 # Commits changes to cards and save any other changes made to the deck.
 deck.save()
@@ -68,13 +68,14 @@ deck.package()
 While `pancanki` gives you the option to create a Deck instance from scratch, it's highly recommended you use one of the two high-level
 functions `open_deck` or `create_deck`.
 
+
 #### create_deck
 
-`def create_deck(deck_name: str, note_type: NoteType = None, from_csv: str = None, media: str = None) -> Deck`
+`def create_deck(deck_name: str, note_type: NoteType = None, from_csv: str = None, media_dir: str = None) -> Deck`
 
 A high-level function used for creating a new Anki deck.
 
-__Parameters__
+*Parameters*
 
 `deck_name: str` The name of the deck you want to create. If you do not specify, when you package your deck, it will be saved as `deck_name.apkg`.
 
@@ -89,33 +90,48 @@ your package when calling `deck.package()`. Leaving as `None` will not set any d
 
 #### open_deck
 
-`def open_deck(filename, extract_to: str = None, in_memory: bool = False, read_only: bool = False) -> Deck`
+`def open_deck(filename, extract_to: str = None) -> Deck`
 
 A high level function used for opening an existing Anki deck. This function only accepts compressed files with the extension `.apkg` and
 nothing else. 
 
-__Parameters__
+*Parameters*
 
 `filename: str` The compressed Anki deck file (the .apkg file) that you wish to open.
 
 `extract_to: str` Optional path and directory you wish you extract the .apkg file to. Leaving as `None` will delete the uncompressed 
 files once you close the deck. Note that once you close a deck, all the files are compressed back into a valid .apkg file.
 
-`in_memory: bool` If set to `True`, `pancanki` will attempt to uncompress the .apkg file and load all the resources into memory 
-(including the database). If you want *really* fast reads, it's recommemded you use this mode in combination with `read_only` mode.
-Note that a lot of Anki decks are very large and probably won't fit into memory.
 
-`read_only: bool` If set to `True`, `pancanki` will open all files and the database connection in read only mode. Adding, editing, 
-or deleting of cards as well as any other edits you'd like to make to the deck are disabled if set to `True`.
+#### The Deck Object
 
-#### create_deck
+`pancanki` manages Anki decks using a single `Deck` object. A `Deck` is returned when you call `open_deck` or `create_deck`.
 
+*Useful Attributes & Properties*
 
+`deck_id: int` a 32-bit integer used to idenify the deck within Anki. Read more about deck ids here.
 
-#### Deck
+`collection: sqlalchemy.Session` The database session used to interaction with the collection.anki2 SQLite3 database.
 
-`pancanki` manages Anki decks using a single `Deck` object. 
+`note_type: NoteType` The note type that the deck uses.
 
+`size: int` Returns the number of cards in the deck.
+
+*Useful Methods*
+
+`notes() -> List` Returns all the notes within the deck as a list.
+
+`cards() -> List` Returns all the cards within the deck as a list.
+
+`add_note(**fields) -> None` Creates a new note.
+
+`delete_note(**fields) -> None` Removes the first note in the deck that matches the given fields. If a note is deleted, all cards under that note are also deleted from the deck.
+
+`save() -> None` Saves and commits all changes to the collection database. Read more about saving.
+
+`close(save: bool=True) -> None` Optionally saves and closes the connection to the database and 
+
+#### Card Types
 
 ## Credits
 

@@ -1,5 +1,6 @@
 import time
 import json
+import random
 import pathlib
 from typing import List, Dict, Tuple
 
@@ -14,6 +15,7 @@ from . import config, database
 
 
 class Deck:
+    deck_id = None
     collection_path = None
     connection_flags = ''
     media_path = None
@@ -41,8 +43,12 @@ class Deck:
         """
         pass
 
-    def _generate_deck_id(self):
-        pass
+    def _generate_deck_id(self) -> int:
+        """ Sets the deck's deck_id attribute to a random 32-bit integer and returns it.
+        """
+        self.deck_id = random.getrandombits(32)
+
+        return self.deck_id
 
     def _create_connection_to_existing_collection(self) -> None:
         """ Sets connection as a standard connection based on unzipped .apkg file.
@@ -50,25 +56,13 @@ class Deck:
         z = zipfile.ZipFile(self.apkg_file)
 
         self.apkg_dir = pathlib.Path() / str('.' + str(int(time.time())))
-
         collection_path = self.apkg_dir / 'collection.anki2'
-
+        
         z.extractall(path=self.apkg_dir)
 
-        print('sqlite:///file:' + str(collection_path.absolute()))
-
-        config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))
-        
+        config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))        
         self.collection = Session(config.Engine)
-
         config.Base.prepare(config.Engine, reflect=True)
-
-    def _close_connection(self) -> None:
-        if self.conn:
-            self.conn.close()
-
-    def _save_changes(self) -> None:
-        pass
 
     def notes(self) -> List:
         return self.collection.query(database.Note).all()
@@ -81,6 +75,14 @@ class Deck:
 
     def delete_card(self, card_id) -> None:
         pass
+
+    def save(self, *args, **kwargs) -> None:
+        if self.collection:
+            self.collection.commit(*args, **kwargs)
+
+    def close(self) -> None:
+        if self.colleciton:
+            self.colleciton.close()
 
     @property
     def size(self):

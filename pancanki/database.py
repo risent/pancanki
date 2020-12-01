@@ -26,9 +26,6 @@ class Collection(config.Base):
     dconf = Column(String)
     tags = Column(String)
 
-    def __str__(self):
-        return f'<Collection {self.id}>'
-
 
 class Note(config.Base):
     __tablename__ = 'notes'
@@ -45,35 +42,33 @@ class Note(config.Base):
     flags = Column(Integer, default=0)
     data = Column(String, default='')
 
-    def __str__(self):
-        return f'<Note {self.id}>'
+    cards = relationship('Card')
 
 
 class Card(config.Base):
     __tablename__ = 'cards'
 
     id = Column(Integer, primary_key=True)
-    nid: Column(Integer)
-    did: Column(Integer)
-    ord: Column(Integer)
-    mod: Column(Integer)
-    usn: Column(Integer, default=0)
-    type: Column(Integer, default=0)
-    queue: Column(Integer)
-    due: Column(Integer)
-    ivl: Column(Integer)
-    factor: Column(Integer)
-    reps: Column(Integer)
-    lapses: Column(Integer)
-    left: Column(Integer)
-    odue: Column(Integer)
-    odid: Column(Integer)
-    flags: Column(Integer)
-    data: Column(String, default='')
-    
-    def __str__(self):
-        return f'<Card {self.id}>'
+    nid = Column(Integer, ForeignKey('notes.id'))
+    did = Column(Integer)
+    ord = Column(Integer)
+    mod = Column(Integer)
+    usn = Column(Integer, default=0)
+    type = Column(Integer, default=0)
+    queue = Column(Integer)
+    due = Column(Integer)
+    ivl = Column(Integer)
+    factor = Column(Integer)
+    reps = Column(Integer)
+    lapses = Column(Integer)
+    left = Column(Integer)
+    odue = Column(Integer)
+    odid = Column(Integer)
+    flags = Column(Integer)
+    data = Column(String, default='')
 
+    #note = relationship('Note', foreign_keys=[nid])
+    revisions = relationship('RevisionLog')
 
 class Grave(config.Base):
     __tablename__ = 'graves'
@@ -83,15 +78,12 @@ class Grave(config.Base):
     oid = Column(Integer)
     type = Column(Integer)
 
-    def __str__(self):
-        return f'<Grave {self.id}>'
-
 
 class RevisionLog(config.Base):
     __tablename__ = 'revlog'
 
     id = Column(Integer, primary_key=True)
-    cid = Column(Integer)
+    cid = Column(Integer, ForeignKey('cards.id'))
     usn = Column(Integer, default=0)
     ease = Column(Integer)
     ivl = Column(Integer)
@@ -100,5 +92,4 @@ class RevisionLog(config.Base):
     time = Column(Integer)
     type = Column(Integer)
 
-    def __str__(self):
-        return f'<RevisionLog {self.id}>'
+    #card = relationship('Card', foreign_keys=[cid])
