@@ -65,8 +65,10 @@ class Deck:
 
         config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))
         database.Base.metadata.create_all(config.Engine)
+        database.create_indexes(config.Engine)
 
         self.collection = Session(config.Engine)
+
         self._get_note_types()
 
     def _create_connection_and_collection(self) -> None:
@@ -77,6 +79,7 @@ class Deck:
 
         config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))
         database.Base.metadata.create_all(config.Engine)
+        database.create_indexes(config.Engine)
 
         self.collection = Session(config.Engine)
 

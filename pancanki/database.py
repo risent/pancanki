@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Index
 from sqlalchemy.orm import relationship
 
 from . import config
@@ -93,3 +93,16 @@ class RevisionLog(Base):
     type = Column(Integer)
 
 
+def create_indexes(engine):
+    try:
+        Index('ix_cards_nid', Card.nid).create(bind=engine)
+        Index('ix_cards_sched', Card.did, Card.queue, Card.due).create(bind=engine)
+        Index('ix_cards_usn', Cards.usn).create(bind=engine)
+        Index('ix_notes_csum', Note.csum).create(bind=engine)
+        Index('ix_notes_usn', Note.usn).create(bind=engine)
+        Index('ix_revlog_cid', RevisionLog.cid).create(bind=engine)
+        Index('ix_revlog_usn', RevisionLog.usn).create(bind=engine)
+    
+    except Exception:
+        # the indexes are already created
+        pass
