@@ -4,8 +4,8 @@ from typing import List, Dict, NamedTuple
 
 import pystache
 
-from .template import Template
-from .field import Field
+from pancanki.template import Template
+from pancanki.field import Field
 
 
 class NoteType:

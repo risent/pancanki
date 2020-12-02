@@ -29,10 +29,10 @@ my_note_type.style = '.card {font-family: arial; font-size: 20px; text-align: ce
 deck.package()
 ```
 
-### Creating a New Deck
+### Creating a New Deck with a Custom Note Type
 
 ```python
-import pancanki
+from pancanki import create_deck
 
 template = pancanki.Template('Card 1', question_format='{{Question}}<br>{{Picture}}', answer_format='{{FrontSide}}<hr id="answer">{{Answer}}')
 fields = [pancanki.Field('Question'), pancanki.Field('Picture', media_type='img'), pancanki.Field('Answer')]
@@ -45,16 +45,13 @@ deck.add_note(question='How do you exit vi without saving changes?', picture='vi
 deck.package()
 ```
 
-### Create a New Deck from a CSV File
+### Create a New Deck from a CSV File with a Default Note Type
 
 ```python
 from pancanki import create_deck
+from pancanki.contrib.note_types import FrontSide
 
-template = pancanki.Template('Card 1', question_format='{{ColumnA}}', answer_format='{{FrontSide}}<hr id="answer">{{ColumnB}}')
-fields = [pancanki.Field('ColumnA'), pancanki.Field('ColumnB')]
-my_note_type = pancanki.NoteType(templates=[template], fields=fields)
-
-deck = create_deck('My Deck', from_csv='path/to/my_data.csv', note_type=my_note_type)
+deck = create_deck('My Deck', from_csv='path/to/my_data.csv', note_type=FrontSide)
 
 deck.package()
 ```
@@ -71,7 +68,7 @@ functions `open_deck` or `create_deck`.
 
 A high-level function used for creating a new Anki deck.
 
-*Parameters*
+**Parameters**
 
 `deck_name: str` The name of the deck you want to create. If you do not specify, when you package your deck, it will be saved as `deck_name.apkg`.
 
@@ -91,7 +88,7 @@ your package when calling `deck.package()`. Leaving as `None` will not set any d
 A high level function used for opening an existing Anki deck. This function only accepts compressed files with the extension `.apkg` and
 nothing else. 
 
-*Parameters*
+**Parameters**
 
 `filename: str` The compressed Anki deck file (the .apkg file) that you wish to open.
 
@@ -103,13 +100,13 @@ files once you close the deck. Note that once you close a deck, all the files ar
 
 `pancanki` manages Anki decks using a single `Deck` object. A `Deck` is returned when you call `open_deck` or `create_deck`.
 
-*Useful Attributes & Properties*
+**Useful Attributes & Properties**
 
-`deck_id: int` a 32-bit integer used to idenify the deck within Anki. Read more about deck ids here.
+`deck_id: int` a 32-bit integer used to idenify the deck within Anki. Read more about deck ids [here](#deck_ids).
 
 `collection: sqlalchemy.Session` The database session used to interaction with the collection.anki2 SQLite3 database.
 
-`note_type: NoteType` The note type that the deck uses.
+`note_types: List[NoteType]` A list of note types that the deck uses.
 
 `size: int` Returns the number of cards in the deck.
 
@@ -119,16 +116,17 @@ files once you close the deck. Note that once you close a deck, all the files ar
 
 `cards() -> List` Returns all the cards within the deck as a list.
 
-`add_note(**fields) -> None` Creates a new note.
+`add_note(note_type, **fields) -> None` Creates a new note in the deck.
 
 `delete_note(**fields) -> None` Removes the first note in the deck that matches the given fields. If a note is deleted, all cards under that note are also deleted from the deck.
 
 `save() -> None` Saves and commits all changes to the collection database. Read more about saving.
 
-`close(save: bool=True) -> None` Optionally saves and closes the connection to the database and 
+`package(filename: str = None) -> None` Saves and commits all changes to the collection database and compresses all necessary file into a .apkg file. A filename can be optioanlly set, otherwise the the deck name will be used as the filename.
 
-#### Card Types
 
 ## Credits
 
-Inspired by [genanki](https://github.com/kerrickstaley/genanki)
+[Anki](https://apps.ankiweb.net/)
+
+[genanki](https://github.com/kerrickstaley/genanki)

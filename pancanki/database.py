@@ -1,15 +1,15 @@
 import sqlalchemy
-from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from . import config
 
 
-config.Base = automap_base()
+Base = declarative_base() 
 
 
-class Collection(config.Base):
+class Collection(Base):
     __tablename__ = 'col'
 
     id = Column(Integer, primary_key=True)
@@ -27,7 +27,7 @@ class Collection(config.Base):
     tags = Column(String)
 
 
-class Note(config.Base):
+class Note(Base):
     __tablename__ = 'notes'
 
     id = Column(Integer, primary_key=True)
@@ -45,7 +45,7 @@ class Note(config.Base):
     cards = relationship('Card')
 
 
-class Card(config.Base):
+class Card(Base):
     __tablename__ = 'cards'
 
     id = Column(Integer, primary_key=True)
@@ -67,10 +67,10 @@ class Card(config.Base):
     flags = Column(Integer)
     data = Column(String, default='')
 
-    #note = relationship('Note', foreign_keys=[nid])
+    note = relationship('Note')
     revisions = relationship('RevisionLog')
 
-class Grave(config.Base):
+class Grave(Base):
     __tablename__ = 'graves'
 
     id = Column(Integer, primary_key=True)
@@ -79,7 +79,7 @@ class Grave(config.Base):
     type = Column(Integer)
 
 
-class RevisionLog(config.Base):
+class RevisionLog(Base):
     __tablename__ = 'revlog'
 
     id = Column(Integer, primary_key=True)
@@ -92,4 +92,4 @@ class RevisionLog(config.Base):
     time = Column(Integer)
     type = Column(Integer)
 
-    #card = relationship('Card', foreign_keys=[cid])
+
