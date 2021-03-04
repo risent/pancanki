@@ -34,9 +34,18 @@ deck.package()
 ```python
 from pancanki import create_deck
 
-template = pancanki.Template('Card 1', question_format='{{Question}}<br>{{Picture}}', answer_format='{{FrontSide}}<hr id="answer">{{Answer}}')
-fields = [pancanki.Field('Question'), pancanki.Field('Picture', media_type='img'), pancanki.Field('Answer')]
-note_type = pancanki.NoteType(templates=[template], fields=fields)
+templates = [
+    pancanki.Template('Card 1', question_format='{{Question}}<br>{{Picture}}<br>{{Sound}}', answer_format='{{FrontSide}}<hr id="answer">{{Answer}}')
+]
+
+fields = [
+    pancanki.Field('Question'),
+    pancanki.Field('Picture', image=True),
+    pancanki.Field('Sound', sound=True),
+    pancanki.Field('Answer')
+]
+
+note_type = pancanki.NoteType(templates=templates, fields=fields)
 
 deck = pancanki.create_deck('My Deck', media_dir='my_media/', note_type=note_type)
 
@@ -95,6 +104,11 @@ nothing else.
 `extract_to: str` Optional path and directory you wish you extract the .apkg file to. Leaving as `None` will delete the uncompressed 
 files once you close the deck. Note that once you close a deck, all the files are compressed back into a valid .apkg file.
 
+**Important**
+
+`pancanki` extracts `.apkg` files into a temporary directory. This directory is automatically 
+deleted once `close()` or `package()` is called. Please call either of those methods before 
+ending any `pancanki` process to ensure proper cleanup.
 
 #### The Deck Object
 
@@ -102,7 +116,7 @@ files once you close the deck. Note that once you close a deck, all the files ar
 
 **Useful Attributes & Properties**
 
-`deck_id: int` a 32-bit integer used to idenify the deck within Anki. Read more about deck ids [here](#deck_ids).
+`deck_id: int` a 32-bit integer used to idenify the deck within Anki.
 
 `collection: sqlalchemy.Session` The database session used to interaction with the collection.anki2 SQLite3 database.
 
