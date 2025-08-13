@@ -17,10 +17,10 @@ class Template:
 
         else:
             if name is None:
-                raise 'Name must not be None.'
+                raise ValueError('Name must not be None.')
 
             if answer_format is None:
-                raise 'answer_format...'
+                raise ValueError('answer_format must not be None.')
 
             self.name = name
             self.answer_format = answer_format

@@ -14,6 +14,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.ext.declarative import declarative_base
 
 from pancanki import config, database
+from pancanki.note import Note
 from pancanki.note_type import NoteType
 
 
@@ -35,21 +36,46 @@ class Deck:
         self.action = action
         self.options = options
         self.apkg_file = pathlib.Path(filename)
+        self.name = self.apkg_file.stem
+        self.engine = None
 
         if self.action == 'open':
             self._create_connection_to_existing_collection(extract_to=options.get('extract_to', ''))
             
         elif action == 'create':
             self.apkg_dir = self.apkg_file
+            self._generate_deck_id()
             self._create_connection_and_collection()
 
+            if options.get('note_types'):
+                self.note_types = options.get('note_types')
+
+            col = database.Collection(
+                id=1,
+                crt=int(time.time()),
+                mod=int(time.time()),
+                scm=int(time.time()),
+                ver=11,
+                dty=0,
+                usn=0,
+                ls=0,
+                conf='{"nextPos": 1, "estTimes": true, "activeDecks": [1], "sortType": "noteFld", "timeLim": 0, "sortBackwards": false, "addToCur": true, "curDeck": 1, "newBury": true, "newSpread": 0, "dueCounts": true, "curModel": "1564944648016", "collapseTime": 1200}',
+                models=self._prepare_models_json(),
+                decks=self._prepare_decks_json(),
+                dconf='{"1": {"name": "Default", "replayq": true, "lapse": {"leechFails": 8, "minInt": 1, "delays": [10], "leechAction": 0, "mult": 0}, "rev": {"perDay": 200, "ivlFct": 1, "maxIvl": 36500, "minSpace": 1, "ease4": 1.3, "bury": true, "hardFactor": 1.2}, "timer": 0, "maxTaken": 60, "new": {"perDay": 20, "delays": [1, 10], "separate": true, "ints": [1, 4, 7], "initialFactor": 2500, "bury": true, "order": 1}, "mod": 0, "usn": 0}}',
+                tags='{}'
+            )
+            self.collection.add(col)
+            self.collection.commit()
+
+
         else:
-            raise 'Invalid action.'
+            raise Exception('Invalid action.')
 
     def _generate_deck_id(self) -> int:
         """ Sets the deck's deck_id attribute to a random 32-bit integer and returns it.
         """
-        self.deck_id = random.getrandombits(32)
+        self.deck_id = random.getrandbits(32)
 
         return self.deck_id
 
@@ -63,11 +89,8 @@ class Deck:
         
         z.extractall(path=self.apkg_dir)
 
-        config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))
-        database.Base.metadata.create_all(config.Engine)
-        database.create_indexes(config.Engine)
-
-        self.collection = Session(config.Engine)
+        self.engine = create_engine('sqlite:///' + str(collection_path.absolute()))
+        self.collection = Session(self.engine)
 
         self._get_note_types()
 
@@ -77,11 +100,10 @@ class Deck:
         collection_path = self.apkg_dir / 'collection.anki2'
         collection_path.touch()
 
-        config.Engine = create_engine('sqlite:///' + str(collection_path.absolute()))
-        database.Base.metadata.create_all(config.Engine)
-        database.create_indexes(config.Engine)
+        self.engine = create_engine('sqlite:///' + str(collection_path.absolute()))
+        database.Base.metadata.create_all(self.engine, checkfirst=True)
 
-        self.collection = Session(config.Engine)
+        self.collection = Session(self.engine)
 
     def _get_note_types(self) -> None:
         note_types = json.loads(self.collection.query(database.Collection).first().models)
@@ -111,9 +133,13 @@ class Deck:
 
     def add_note(self, note_type, **fields) -> None:
         if note_type is None:
+            if not self.note_types:
+                raise ValueError("Deck has no note types.")
             note_type = self.note_types[0]
 
-        new_note = None
+        field_values = [fields[field.name] for field in note_type.fields]
+        new_note = Note(note_type=note_type, fields=field_values)
+        new_note.save(self.collection)
 
     def delete_note(self, note_id) -> None:
         pass
@@ -126,8 +152,62 @@ class Deck:
         if self.collection:
             self.collection.commit(*args, **kwargs)
 
+    def _prepare_decks_json(self):
+        decks = {
+            "1": {
+                "id": 1,
+                "name": "Default",
+                "mod": int(time.time()),
+                "usn": -1,
+                "desc": "",
+                "dyn": 0,
+                "conf": 1,
+                "extendNew": 10,
+                "extendRev": 50,
+                "collapsed": True
+            },
+            str(self.deck_id): {
+                "id": self.deck_id,
+                "name": self.name,
+                "mod": int(time.time()),
+                "usn": -1,
+                "desc": "",
+                "dyn": 0,
+                "conf": 1,
+                "extendNew": 10,
+                "extendRev": 50,
+                "collapsed": False,
+            }
+        }
+        return json.dumps(decks)
+
+    def _prepare_models_json(self):
+        models = {}
+        for nt in self.note_types:
+            models.update(nt.prepare())
+        return json.dumps(models)
+
     def package(self, filename: str = None) -> None:
-        pass
+        if filename is None:
+            filename = self.name + ".apkg"
+
+        col = self.collection.query(database.Collection).first()
+        col.models = self._prepare_models_json()
+        col.decks = self._prepare_decks_json()
+        self.collection.commit()
+
+        db_path = self.apkg_dir / 'collection.anki2'
+
+        with zipfile.ZipFile(filename, 'w') as z:
+            z.write(db_path, 'collection.anki2')
+
+            media_files = {}
+            if self.media_path and pathlib.Path(self.media_path).is_dir():
+                for i, media_file in enumerate(pathlib.Path(self.media_path).iterdir()):
+                    z.write(media_file, str(i))
+                    media_files[str(i)] = media_file.name
+
+            z.writestr('media', json.dumps(media_files))
 
     @property
     def notes(self) -> List:
@@ -164,6 +244,6 @@ def create_deck(deck_name: str, from_csv: str = None, note_types: List = None) -
     """ Initializes an Anki2 deck.
     """
 
-    d = Deck(deck_name, action='create', from_csv=from_csv)
+    d = Deck(deck_name, action='create', from_csv=from_csv, note_types=note_types)
 
     return d

@@ -39,8 +39,7 @@ class NoteType:
             self.templates = templates
             self.style = style
 
-            if self._valid_fields(fields):
-                self.fields = fields
+            self.fields = fields
 
             for i, template in enumerate(self.templates):
                 template.ordinal = i

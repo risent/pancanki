@@ -95,13 +95,13 @@ class RevisionLog(Base):
 
 def create_indexes(engine):
     try:
-        Index('ix_cards_nid', Card.nid).create(bind=engine)
-        Index('ix_cards_sched', Card.did, Card.queue, Card.due).create(bind=engine)
-        Index('ix_cards_usn', Cards.usn).create(bind=engine)
-        Index('ix_notes_csum', Note.csum).create(bind=engine)
-        Index('ix_notes_usn', Note.usn).create(bind=engine)
-        Index('ix_revlog_cid', RevisionLog.cid).create(bind=engine)
-        Index('ix_revlog_usn', RevisionLog.usn).create(bind=engine)
+        Index('ix_cards_nid', Card.nid).create(bind=engine, checkfirst=True)
+        Index('ix_cards_sched', Card.did, Card.queue, Card.due).create(bind=engine, checkfirst=True)
+        Index('ix_cards_usn', Card.usn).create(bind=engine, checkfirst=True)
+        Index('ix_notes_csum', Note.csum).create(bind=engine, checkfirst=True)
+        Index('ix_notes_usn', Note.usn).create(bind=engine, checkfirst=True)
+        Index('ix_revlog_cid', RevisionLog.cid).create(bind=engine, checkfirst=True)
+        Index('ix_revlog_usn', RevisionLog.usn).create(bind=engine, checkfirst=True)
     
     except Exception:
         # the indexes are already created
