@@ -30,9 +30,8 @@ class Deck:
     apkg_file = None
     apkg_filepath = None
 
-    note_types = []
-
     def __init__(self, filename, action: str = None, **options):
+        self.note_types = []
         self.action = action
         self.options = options
         self.apkg_file = pathlib.Path(filename)
@@ -67,7 +66,6 @@ class Deck:
             )
             self.collection.add(col)
             self.collection.commit()
-
 
         else:
             raise Exception('Invalid action.')
@@ -142,11 +140,16 @@ class Deck:
         new_note.save(self.collection)
 
     def delete_note(self, note_id) -> None:
-        pass
+        note = self.collection.query(database.Note).filter_by(id=note_id).first()
+        if note:
+            for card in note.cards:
+                self.collection.delete(card)
+            self.collection.delete(note)
+            self.collection.commit()
 
     def _close(self) -> None:
-        if self.colleciton:
-            self.colleciton.close()
+        if self.collection:
+            self.collection.close()
 
     def save(self, *args, **kwargs) -> None:
         if self.collection:

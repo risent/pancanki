@@ -56,6 +56,7 @@ class NoteType:
         self.note_type_id = list(note_type)[0]
         nt = note_type[self.note_type_id]
 
+        self.name = nt['name']
         self.deck_id = nt['did']
         self.id = nt['id']
         self.latex_pre = nt['latexPre']
