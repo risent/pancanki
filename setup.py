@@ -16,6 +16,7 @@ setuptools.setup(
     install_requires=[
         'sqlalchemy',
         'pystache',
+        'click',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -23,4 +24,9 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    entry_points={
+        'console_scripts': [
+            'pancanki = pancanki.cli:main',
+        ],
+    },
 )
